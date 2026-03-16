@@ -1,0 +1,33 @@
+- name: Apply security update and restrict HTTP services access3
+  hosts: windows_servers
+  tasks:
+    - name: Download the security update MS15-034
+      win_get_url:
+        url: https://download.microsoft.com/download/6/8/2/6829139b-857b-45e3-94d8-34697192d38e/MS15-034.exe
+        dest: C:\Windows\Temp\MS15-034.exe
+
+    - name: Install the security update MS15-034
+      win_shell: |
+        Start-Process -FilePath "C:\Windows\Temp\MS15-034.exe" -ArgumentList "/quiet" -Wait
+
+    - name: Open Windows Firewall with Advanced Security
+      win_shell: |
+        & 'C:\Windows\System32\control.exe' /name Microsoft.WindowsFirewall /page advanced
+
+    - name: Create inbound rule to block HTTP services
+      win_firewall_rule:
+        name: Block HTTP Services
+        protocol: TCP
+        localport: 80,443
+        action: Block
+        direction: Inbound
+        profile: Any
+
+    - name: Apply the firewall rule to the appropriate network profile(s)
+      win_firewall_rule:
+        name: Block HTTP Services
+        protocol: TCP
+        localport: 80,443
+        action: Block
+        direction: Inbound
+        profile: Public,Private,Domain
