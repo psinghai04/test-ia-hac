@@ -1,0 +1,34 @@
+- name: Install server certificate on Windows Server 2016
+  hosts: windows_servers
+  gather_facts: no
+  tasks:
+    - name: Open Server Management Console
+      win_shell: |
+        Start-Process -FilePath "mmc" -ArgumentList "/3010:certmgr.msc" -Wait
+
+    - name: Navigate to Certificate Management
+      win_shell: |
+        $certMgr = [System.Reflection.Assembly]::LoadWithPartialName("System.Security.Cryptography.X509Certificates")
+        $certStore = $certMgr.StoreLocation::LocalMachine
+        $certStoreName = "My"
+        $certStore = New-Object System.Security.Cryptography.X509Certificates.X509Store($certStoreName, $certStore)
+        $certStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly -bor [System.Security.Cryptography.X509Certificates.OpenFlags.OpenExistingOnly]])
+        $certificates = $certStore.Certificates
+        $certStore.Close()
+
+    - name: Install server certificate
+      win_shell: |
+        $certFile = "C:\path\to\your\server_certificate.cer"
+        $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($certFile)
+        $certStore = [System.Security.Cryptography.X509Certificates.X509Store]::new("My", [System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine)
+        $certStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags.ReadWrite)
+        $certStore.Add($cert)
+        $certStore.Close()
+
+    - name: Verify certificate installation
+      win_shell: |
+        $certStore = [System.Security.Cryptography.X509Certificates.X509Store]::new("My", [System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine)
+        $certStore.Open([System.Security.Cryptography.X509Certificates.OpenFlags.ReadOnly)
+        $certificates = $certStore.Certificates
+        $certificates | Where-Object { $_.Subject -eq "CN=YourServerName" }
+        $certStore.Close()
