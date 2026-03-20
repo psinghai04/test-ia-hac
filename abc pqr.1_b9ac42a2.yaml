@@ -1,0 +1,34 @@
+- name: Apply security update and restrict HTTP services
+  hosts: linux_servers
+  become: yes
+  tasks:
+    - name: Download the security update from Microsoft
+      shell: |
+        wget https://download.microsoft.com/download/1/8/6/186fd79b-8952-469b-9688-7245a7612698/MS15-034-Linux-x86_64.msi
+      register: download_result
+
+    - name: Install the security update
+      shell: |
+        dpkg -i MS15-034-Linux-x86_64.msi
+      when: download_result.rc == 0
+
+    - name: Identify HTTP services to restrict
+      shell: |
+        systemctl list-units --type=service --state=running | grep http
+      register: http_services
+
+    - name: Restrict access to HTTP services using firewall rules
+      shell: |
+        ufw deny from 192.168.1.100
+        ufw deny from 192.168.1.101
+      when: http_services.stdout_lines
+
+    - name: Ensure only authorized users can access HTTP services
+      shell: |
+        ufw allow from 192.168.1.200
+        ufw allow from 192.168.1.201
+      when: http_services.stdout_lines
+
+    - name: Reload firewall rules
+      shell: ufw reload
+      when: http_services.stdout_lines
