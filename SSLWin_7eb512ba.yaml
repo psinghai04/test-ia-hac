@@ -1,0 +1,17 @@
+- name: Install server certificate on Windows Server 2016
+  hosts: windows_servers
+  gather_facts: no
+  tasks:
+    - name: Import server certificate
+      win_certificate:
+        cert: C:\path\to\server_certificate.cer
+        store: LocalMachine
+        subject: "CN=ServerName"
+        location: My
+        force: yes
+      register: cert_import_result
+
+    - name: Verify certificate import
+      debug:
+        msg: "Server certificate imported successfully: {{ cert_import_result }}"
+      when: cert_import_result.changed or cert_import_result.updated
