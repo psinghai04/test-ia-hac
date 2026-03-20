@@ -1,0 +1,27 @@
+- name: Install patches and updates on Windows Server 2016
+  hosts: windows_servers
+  gather_facts: no
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: |
+        cd C:\PatchesAndUpdates
+      register: directory_change
+
+    - name: Install patches and updates
+      win_shell: |
+        # Example command for installing a patch
+        DISM /Online /Add-Package /PackagePath:"C:\PatchesAndUpdates\patch1.msu"
+        # Example command for installing an update
+        DISM /Online /Add-Package /PackagePath:"C:\PatchesAndUpdates\update1.msu"
+      when: directory_change.changed
+
+    - name: Verify installation
+      win_shell: |
+        # Command to check installed patches and updates
+        Get-Package -Name "patch1" -ListAvailable
+        Get-Package -Name "update1" -ListAvailable
+      register: installation_verification
+
+    - name: Output installation verification results
+      debug:
+        var: installation_verification.stdout
