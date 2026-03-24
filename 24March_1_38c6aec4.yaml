@@ -1,0 +1,33 @@
+- name: Apply Security Update for Windows
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Download the security update referenced in MS14-068
+      win_shell: |
+        # Replace the URL with the actual link to the security updates
+        $updateUrl = "http://example.com/MS14-068.exe"
+        $updatePath = "$env:SystemDrive\MS14-068.exe"
+        Invoke-WebRequest -Uri $updateUrl -OutFile $updatePath
+      args:
+        executable: powershell
+      register: download_result
+
+    - name: Install the security update on all affected domain controllers and member servers
+      win_shell: |
+        $updatePath = "$env:SystemDrive\MS14-068.exe"
+        Start-Process -FilePath $updatePath -ArgumentList "/quiet" -Wait
+      args:
+        executable: powershell
+      when: download_result.status == 200
+
+    - name: Verify the installation of the security update
+      win_shell: |
+        # Replace the command with the actual command to verify the installation
+        $installed = Get-Hotfix | Where-Object { $_.HotFixID -eq "MS14-068" }
+        if ($installed) {
+            Write-Host "Security update MS14-068 installed successfully."
+        } else {
+            Write-Host "Security update MS14-068 installation failed."
+        }
+      args:
+        executable: powershell
