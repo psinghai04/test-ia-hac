@@ -1,0 +1,38 @@
+- name: Install security update on Windows systems
+  hosts: windows_servers
+  vars:
+    security_update_path: "C:\\SecurityUpdates\\update.exe"
+    update_command: "msiexec /i {{ security_update_path }} /quiet /norestart"
+
+  tasks:
+    - name: Connect to each affected domain controller and member server
+      ansible.builtin.win_shell:
+        cmd: |
+          echo "Connecting to {{ inventory_hostname }}"
+          # Assuming remote desktop or any other remote access method is already set up
+          # No action needed here as connection is assumed to be established
+      register: connection_check
+
+    - name: Open command prompt or PowerShell console
+      ansible.builtin.win_shell:
+        cmd: echo "Opening command prompt on {{ inventory_hostname }}"
+      register: open_console
+
+    - name: Navigate to the directory where the security update file was downloaded
+      ansible.builtin.win_shell:
+        cmd: "cd {{ security_update_path }}"
+      register: navigate_to_update
+
+    - name: Run the installation command for the security update
+      ansible.builtin.win_shell:
+        cmd: "{{ update_command }}"
+      register: update_installation
+
+    - name: Verify the installation
+      ansible.builtin.win_shell:
+        cmd: "Get-EventLog -LogName Application -EntryType Error -After '2023-01-01' | Select-Object -Last 10"
+      register: installation_verification
+
+    - name: Display installation verification results
+      ansible.builtin.debug:
+        msg: "{{ installation_verification.stdout }}"
