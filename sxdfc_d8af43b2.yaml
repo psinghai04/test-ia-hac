@@ -1,0 +1,28 @@
+- name: Install Security Update on Windows Systems
+  hosts: windows_servers
+  tasks:
+    - name: Navigate to the directory with the security update file
+      win_shell: |
+        cd "{{ update_file_directory }}"
+      args:
+        executable: powershell
+      register: change_directory
+
+    - name: Run the installation command for the security update
+      win_shell: |
+        Start-Process -FilePath "update_file.exe" -ArgumentList "/quiet" -Wait
+      args:
+        executable: powershell
+      when: change_directory.changed
+      register: install_update
+
+    - name: Verify the installation was successful
+      win_shell: |
+        if (Test-Path -Path "C:\Program Files\UpdateInstalled") {
+          Write-Host "Security update installed successfully."
+        } else {
+          Write-Host "Security update installation failed."
+        }
+      args:
+        executable: powershell
+      when: install_update.changed
