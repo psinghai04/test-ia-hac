@@ -1,0 +1,29 @@
+- name: Install Security Update on Windows Systems
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory where the security update file was downloaded
+      win_shell: |
+        cd C:\Path\To\Update\Directory
+      args:
+        executable: powershell
+      register: change_directory
+
+    - name: Run the installation command for the security update
+      win_shell: |
+        .\InstallUpdate.ps1
+      args:
+        executable: powershell
+      when: change_directory.changed
+
+    - name: Verify the installation of the security update
+      win_shell: |
+        Get-HotFix | Where-Object { $_.HotFixId -like "*SecurityUpdateID*" }
+      args:
+        executable: powershell
+      register: installation_verification
+
+    - name: Display installation verification results
+      debug:
+        var: installation_verification.stdout
+      when: installation_verification.stdout != "No results found."
