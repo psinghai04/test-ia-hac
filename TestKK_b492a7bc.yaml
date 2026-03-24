@@ -1,0 +1,29 @@
+- name: Update Red Hat Enterprise Linux Server 6.4
+  hosts: rhel64_servers
+  become: yes
+  tasks:
+    - name: Update all packages
+      yum:
+        update_cache: yes
+        state: latest
+      register: update_output
+
+    - name: Check for updates
+      shell: rpm -q --obsoletes
+      register: obsolete_packages
+
+    - name: Install updates
+      shell: yum update -y
+      when: obsolete_packages.stdout != ""
+      register: install_output
+
+    - name: Verify installation
+      shell: rpm -q --obsoletes
+      register: verify_output
+
+    - name: Ensure no obsolete packages remain
+      assert:
+        that:
+          - verify_output.stdout == ""
+        fail_msg: "Obsolete packages still exist after update."
+        success_msg: "All obsolete packages have been successfully updated."
