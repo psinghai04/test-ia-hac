@@ -1,0 +1,23 @@
+- name: Install Security Updates on Windows Systems
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory where the security update file was downloaded
+      win_shell: |
+        cd "{{ update_directory }}"
+      args:
+        executable: powershell
+      register: directory_change
+
+    - name: Run the installation command for the security update
+      win_shell: |
+        .\security_update_installer.exe /quiet
+      args:
+        executable: powershell
+      when: directory_change.rc == 0
+      register: install_result
+
+    - name: Verify the installation was successful
+      debug:
+        msg: "Security update installed successfully."
+      when: install_result.rc == 0
