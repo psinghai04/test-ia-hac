@@ -1,0 +1,28 @@
+- name: Install security update on Windows servers
+  hosts: windows_servers
+  gather_facts: no
+  vars:
+    update_file_path: "C:\\SecurityUpdates\\update.exe"
+    install_command: "msiexec /i {{ update_file_path }} /quiet"
+
+  tasks:
+    - name: Connect to each affected domain controller and member server
+      win_reboot:
+        reboot: yes
+        delay: 30
+        message: "Security update installation in progress. Please wait for the reboot."
+
+    - name: Navigate to the directory where the security update file was downloaded
+      win_shell: |
+        cd {{ update_file_path }}
+      register: shell_output
+
+    - name: Run the installation command to start the installation process
+      win_shell: |
+        {{ install_command }}
+      register: install_output
+
+    - name: Follow the on-screen instructions to complete the installation
+      win_shell: |
+        echo "Installation completed. Please verify the update."
+      when: install_output.rc == 0
