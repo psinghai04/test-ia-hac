@@ -1,0 +1,37 @@
+- name: Apply security update and restrict HTTP services access
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Download and install security update MS15-034
+      win_shell: |
+        # Command to download and install the security update
+        powershell.exe -Command "Start-Process -FilePath 'C:\Path\To\MS15-034.exe' -ArgumentList '/q' -Wait"
+      register: install_result
+
+    - name: Check if installation was successful
+      fail:
+        msg: "Installation of security update MS15-034 failed."
+      when: install_result.rc != 0
+
+    - name: Open Windows Firewall with Advanced Security
+      win_shell: |
+        # Command to open Windows Firewall with Advanced Security
+        powershell.exe -Command "Start-Process -FilePath 'C:\Windows\System32\firewall.cpl' -Wait"
+      register: firewall_result
+
+    - name: Create inbound rule to block HTTP services
+      win_shell: |
+        # Command to create a new inbound rule to block HTTP services
+        powershell.exe -Command "New-NetFirewallRule -DisplayName 'Block HTTP Services' -Direction Inbound -LocalPort 80 -Protocol TCP -Action Block"
+      register: rule_result
+
+    - name: Apply the rule to the appropriate network profile(s)
+      win_shell: |
+        # Command to apply the rule to all network profiles
+        powershell.exe -Command "Set-NetFirewallRule -Name 'Block HTTP Services' -Profile Public,Private,Domain"
+      register: apply_result
+
+    - name: Check if rule application was successful
+      fail:
+        msg: "Application of firewall rule to block HTTP services failed."
+      when: apply_result.status != "success"
