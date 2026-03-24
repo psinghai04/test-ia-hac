@@ -1,0 +1,44 @@
+- name: Apply security update and restrict HTTP services on Cisco device
+  hosts: cisco_devices
+  gather_facts: no
+  vars:
+    security_update_url: "https://www.microsoft.com/security/blog/security-update-ms15-034"
+    acl_name: "HTTP_Access_Control"
+    authorized_ip_range: "192.168.1.0/24"
+
+  tasks:
+    - name: Download security update from Microsoft
+      ansible.builtin.shell: |
+        curl -O {{ security_update_url }}
+      register: update_download
+
+    - name: Install security update on Cisco device
+      ansible.builtin.shell: |
+        # Assuming a command line tool for installing updates is available
+        install_update.sh {{ update_download.stdout }}
+      when: update_download.stdout != ""
+
+    - name: Identify HTTP services to restrict
+      ansible.builtins.include_vars:
+        file: http_services.json
+        name: http_services
+
+    - name: Configure access control list for HTTP services
+      ansible.builtins.lineinfile:
+        path: /etc/cisco/firewall.conf
+        regexp: "{{ item }}"
+        line: "{{ acl_name }} deny ip any any source {{ authorized_ip_range }}"
+        state: present
+      loop: "{{ http_services }}"
+      when: http_services is defined
+
+    - name: Ensure ACL is applied to firewall
+      ansible.builtins.lineinfile:
+        path: /etc/cisco/firewall.conf
+        regexp: "{{ acl_name }}"
+        line: "{{ acl_name }} apply"
+        state: present
+
+    - name: Reload firewall configuration
+      ansible.builtins.shell: |
+        reload_firewall.sh
