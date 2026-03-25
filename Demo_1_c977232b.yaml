@@ -1,0 +1,12 @@
+- name: Run security audit on Windows system
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Open a command prompt and run the suma command
+      win_shell: |
+        Start-Process -FilePath "C:\Path\To\suma.exe" -ArgumentList "-x -a Security" -Wait
+      register: command_output
+
+    - name: Display the output of the security audit
+      debug:
+        var: command_output.stdout
