@@ -1,0 +1,24 @@
+- name: Install Security Update on Windows Systems
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory with the security update file
+      win_shell: |
+        cd "{{ update_file_path}}"
+      args:
+        executable: cmd
+      register: navigate_result
+
+    - name: Run the installation command for the security update
+      win_shell: |
+        "{{ update_file_name}} /quiet /norestart"
+      args:
+        executable: cmd
+      register: install_result
+
+    - name: Verify installation success
+      assert:
+        that:
+          - install_result.stdout.find("Installation completed successfully") != -1
+        fail_msg: "Security update installation failed"
+        success_msg: "Security update installed successfully"
