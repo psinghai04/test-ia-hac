@@ -1,0 +1,42 @@
+- name: Apply security updates and restricting HTTP services
+  hosts: linux_servers
+  become: yes
+  tasks:
+    - name: Download the security update from Microsoft website
+      get_url:
+        url: "https://example.com/security_update_ms15-034.deb"
+        dest: /tmp/security_update.deb
+
+    - name: Install the security update
+      dnf:
+        name: /tmp/security_update.deb
+        state: present
+
+    - name: Identify HTTP services to restrict
+      shell: "systemctl list-units --type=service | grep 'http'"
+      register: http_services
+
+    - name: Restrict access to HTTP services
+      ansible.builtin.firewall:
+        chain: input
+        dport: "{{ item.split()[0] }}"
+        protocol: tcp
+        action: accept
+      loop: "{{ http_services.stdout_lines }}"
+      when: item.split()[0] != 'httpd.service'
+
+    - name: Ensure only authorized users can access HTTP services
+      ansible.builtin.user:
+        name: authorized_user
+        state: present
+        system: yes
+
+    - name: Update firewall to restrict access
+      ansible.builtin.firewall:
+        chain: input
+        dport: 80
+        protocol: tcp
+        action: deny
+        source: "{{ item }}"
+      loop: "{{ groups['linux_servers'] }}"
+      when: item != 'authorized_user'
