@@ -1,0 +1,31 @@
+- name: Install Security Update on Windows Systems
+  hosts: windows_servers
+  tasks:
+    - name: Navigate to the directory with the security update file
+      win_shell: |
+        cd "{{ update_file_path}}"
+      args:
+        executable: powershell
+      become: yes
+
+    - name: Run the installation command for the security update
+      win_shell: |
+        Start-Process -FilePath "{{ update_file_path}}\security_update.exe" -ArgumentList "/quiet" -Wait
+      args:
+        executable: powershell
+      become: yes
+
+    - name: Verify the installation
+      win_shell: |
+        Get-Help -Name "security_update.exe"
+      args:
+        executable: powershell
+      become: yes
+
+    - name: Restart the system if required
+      win_shell: |
+        Restart-Computer -Force
+      args:
+        executable: powershell
+      become: yes
+      when: system_restart_required
