@@ -1,0 +1,31 @@
+- name: Apply security update MS15-034 and restrict HTTPS services
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Download security update MS15-034
+      win_package:
+        name: "MS15-034"
+        source: "https://download.microsoft.com/download/1/2/5/12575252-4788-4D93-938D-529326D81293/MS15-034.exe"
+        state: present
+
+    - name: Install security update MS15-034
+      win_command:
+        cmd: "MS15-034.exe /quiet"
+        args:
+          stdin: /quiet
+        creates: "C:\\Windows\\System32\\MS15-034.log"
+
+    - name: Open Windows Firewall with Advanced Security
+      win_shell: |
+        netsh advfirewall set allprofiles state on
+        netsh advfirewall firewall showall
+
+    - name: Create inbound rule to block HTTP services
+      win_firewall_rule:
+        name: "Block HTTP Services"
+        protocol: TCP
+        localport: 80
+        action: Block
+        profile: Public,Private,Domain
+        state: present
+        direction: Inbound
