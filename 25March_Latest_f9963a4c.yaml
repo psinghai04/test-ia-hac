@@ -1,0 +1,22 @@
+- name: Install Security Update on Windows Operating Systems
+  hosts: windows_servers
+  tasks:
+    - name: Open command prompt or PowerShell
+      win_shell: echo "Opening command prompt or PowerShell..."
+      register: command_open
+
+    - name: Navigate to the directory with the security update file
+      win_shell: cd C:\Path\To\Security\Update
+      register: directory_change
+
+    - name: Run the installation command for the security update
+      win_shell: start-process -FilePath "C:\Path\To\Security\Update\update.exe" -ArgumentList "/quiet"
+      register: installation_run
+
+    - name: Verify installation status
+      win_shell: Get-EventLog -LogName Application -Source "SecurityUpdateInstall" -Newest 1
+      register: installation_status
+
+    - name: Display installation status
+      debug:
+        msg: "{{ installation_status.stdout }}"
