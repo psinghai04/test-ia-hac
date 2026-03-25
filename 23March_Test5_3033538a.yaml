@@ -1,0 +1,27 @@
+- name: Apply security update and restrict HTTP services
+  hosts: windows_servers
+  tasks:
+    - name: Download security update MS15-034
+      win_shell: |
+        $webClient = New-Object System.Net.WebClient
+        $webClient.DownloadFile("http://example.com/path/to/ms15-034.exe", "C:\Windows\Temp\ms15-034.exe")
+      register: download_result
+
+    - name: Install security update MS15-034
+      win_shell: |
+        Start-Process -FilePath "C:\Windows\Temp\ms15-034.exe" -ArgumentList "/quiet" -Wait
+      when: download_result.status == 0
+
+    - name: Open Windows Firewall with Advanced Security
+      win_shell: |
+        Start-Process -FilePath "C:\Windows\System32\firewall.cpl" -ArgumentList "/open" -Wait
+
+    - name: Create inbound rule to block HTTP services
+      win_firewall:
+        name: "Block HTTP Services"
+        direction: inbound
+        protocol: tcp
+        localport: 80
+        action: block
+        profile: any
+        description: "Blocks all incoming connections to HTTP services on port 80"
