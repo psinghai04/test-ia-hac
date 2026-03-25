@@ -1,0 +1,36 @@
+- name: Apply security update and restrict HTTPS access
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Download security update MS15-034
+      win_url:
+        url: "https://download.microsoft.com/download/4/8/6/486b1c26-759e-4727-8346-464b62715169/KB2994444.exe"
+        dest: "C:\\Updates\\KB2994444.exe"
+        mode: 0755
+
+    - name: Install security update MS15-034
+      win_command:
+        cmd: "C:\\Updates\\KB2994444.exe /quiet /norestart"
+        args:
+          - /quiet
+          - /norestart
+
+    - name: Restrict HTTP access via firewall
+      win_firewall_rule:
+        name: "Block unauthorized HTTP access"
+        direction: Inbound
+        protocol: TCP
+        localport: 80
+        action: Deny
+        profile: Domain,Private
+        description: "Restrict access to HTTP services to authorized users only."
+
+    - name: Update firewall rules to allow authorized access
+      win_firewall_rule:
+        name: "Allow authorized HTTP access"
+        direction: Inbound
+        protocol: TCP
+        localport: 80
+        action: Allow
+        profile: Domain,Private
+        description: "Allow access to HTTP services for authorized users only."
