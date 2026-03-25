@@ -1,0 +1,43 @@
+- name: Install patches and updates on Windows Server 2016
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: |
+        $downloadPath = "C:\PatchesAndUpdates"
+        Set-Location -Path $downloadPath
+      args:
+        executable: powershell
+
+    - name: Install each patch and update
+      win_shell: |
+        $patches = Get-ChildItem -Path "C:\PatchesAndUpdates\*.msu"
+        foreach ($patch in $patches) {
+          $patchName = $patch.Name
+          Write-Host "Installing patch: $patchName"
+          & $patch.FullName
+        }
+      args:
+        executable: powershell
+
+    - name: Install each update
+      win_shell: |
+        $updates = Get-ChildItem -Path "C:\PatchesAndUpdates\*.msi"
+        foreach ($update in $updates) {
+          $updateName = $update.Name
+          Write-Host "Installing update: $updateName"
+          & $update.FullName
+        }
+      args:
+        executable: powershell
+
+    - name: Verify installation
+      win_shell: |
+        $installedPatches = Get-ChildItem -Path "C:\PatchesAndUpdates\Installed"
+        if ($installedPatches.Count -gt 0) {
+          Write-Host "Installation completed successfully."
+        } else {
+          Write-Host "Installation failed."
+        }
+      args:
+        executable: powershell
