@@ -1,0 +1,63 @@
+- name: Apply security update MS15-034 and restrict HTTPS service access
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Download security update MS15-034
+      win_package:
+        name: "MS15-034"
+        source: "http://download.microsoft.com/download/1/2/3/1234567890/MS15-034.msi"
+        state: present
+
+    - name: Install security update MS15-034
+      win_package:
+        name: "MS15-034"
+        state: installed
+
+    - name: Open Windows Firewall with Advanced Security
+      win_shell: |
+        powershell -Command "Start-Process -FilePath 'firewall.cpl' -ArgumentList '/oe' -Wait"
+      register: firewall_open
+
+    - name: Create inbound rule to block HTTP services
+      win_firewall_rule:
+        name: "Block HTTP Services"
+        direction: Inbound
+        action: Block
+        protocol: TCP
+        localport: 80
+        remoteip: Any
+        profile: Any
+      register: firewall_rule
+
+    - name: Apply firewall rule to network profiles
+      win_firewall_rule:
+        name: "Block HTTP Services"
+        direction: Inbound
+        action: Block
+        protocol: TCP
+        localport: 80
+        remoteip: Any
+        profile: Public
+      register: firewall_rule_public
+
+    - name: Apply firewall rule to network profiles
+      win_firewall_rule:
+        name: "Block HTTP Services"
+        direction: Inbound
+        action: Block
+        protocol: TCP
+        localport: 80
+        remoteip: Any
+        profile: Private
+      register: firewall_rule_private
+
+    - name: Apply firewall rule to network profiles
+      win_firewall_rule:
+        name: "Block HTTP Services"
+        direction: Inbound
+        action: Block
+        protocol: TCP
+        localport: 80
+        remoteip: Any
+        profile: Domain
+      register: firewall_rule_domain
