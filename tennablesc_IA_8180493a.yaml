@@ -1,4 +1,4 @@
-- name: Update system configuration to replace affected ciphers with secure algorithms
+- name: Update system configuration to replace affected ciphers with secure algorithmss
   hosts: linux_servers
   become: yes
   tasks:
