@@ -1,0 +1,35 @@
+- name: Update system configuration to replace affected ciphers with secure algorithms
+  hosts: linux_servers
+  become: yes
+  tasks:
+    - name: Backup current system configuration
+      copy:
+        src: /etc/crypto-policies/openssh/config
+        dest: /etc/crypto-policies/openssh/config.bak
+        remote_src: yes
+      when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
+
+    - name: Replace affected ciphers with secure algorithms
+      lineinfile:
+        path: /etc/crypto-policies/openssh/config
+        regexp: '^Ciphers '
+        line: 'Ciphers aes256-gcm@openssh.com,aes128-gcm@openssh.com,chacha20-mac@openssh.com,aes256-ctr,aes192-ctr,aes128-ctr'
+      when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
+
+    - name: Restart OpenSSH service to apply changes
+      service:
+        name: opensshd
+        state: restarted
+      when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
+
+    - name: Verify cipher configuration
+      shell: grep 'Ciphers' /etc/crypto-policies/openssh/config
+      register: cipher_config
+      when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
+
+    - name: Ensure cipher configuration is correct
+      assert:
+        that:
+          - "'aes256-gcm@openssh.com' in cipher_config.stdout"
+        fail_msg: "Cipher configuration is not correct."
+      when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
