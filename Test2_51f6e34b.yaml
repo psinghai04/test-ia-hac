@@ -1,0 +1,44 @@
+- name: Apply security update and restrict HTTP service
+  hosts: linux_servers
+  become: yes
+  tasks:
+    - name: Download security update from Microsoft website
+      get_url:
+        url: https://download.microsoft.com/download/7/1/E/71e7896e-9b1e-4538-88d8-552811894a88/MS15-034_update.tar.gz
+        dest: /tmp/MS15-034_update.tar.gz
+        mode: '0644'
+
+    - name: Extract security update
+      unarchive:
+        src: /tmp/MS15-034_update.tar.gz
+        dest: /usr/local/updates/MS15-034
+        remote_src: yes
+
+    - name: Install security update
+      command: /usr/local/updates/MS15-034/install.sh
+      environment:
+        PATH: /usr/local/updates/MS15-034:$PATH
+
+    - name: Identify HTTP services to restrict
+      shell: 'systemctl list-units --type=service --state=running | grep http'
+      register: http_services
+
+    - name: Restrict access to HTTP services using firewall
+      ansible.builtin.firewall:
+        chain: input
+        action: accept
+        dport: "{{ item.split()[0] }}"
+        proto: tcp
+      loop: "{{ http_services.stdout_lines }}"
+      when: item.split()[0] is search('^http')
+
+    - name: Ensure only authorized users can access HTTP services
+      ansible.builtin.acl:
+        path: /etc/firewall/access_control
+        permission: 'u+rw'
+        user: 'authorized_user'
+
+    - name: Reload firewall rules
+      ansible.builtin.service:
+        name: firewalld
+        state: restarted
