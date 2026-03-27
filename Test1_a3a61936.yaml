@@ -1,0 +1,40 @@
+- name: Apply security update and restrict HTTP services
+  hosts: linux_servers
+  become: yes
+  tasks:
+    - name: Download the security update from Microsoft website
+      get_url:
+        url: https://security.microsoft.com/MS15-034
+        dest: /tmp/MS15-034.rpm
+      register: security_update
+
+    - name: Install the security update on the Linux system
+      dnf:
+        name: /tmp/MS15-034.rpm
+        state: present
+
+    - name: Identify HTTP services that need to be restricted
+      shell: "systemctl list-units --type=service | grep http"
+      register: http_services
+
+    - name: Restrict access to HTTP services using firewall rules
+      firewalld:
+        service: "{{ item }}"
+        action: add
+        zone: public
+      loop: "{{ http_services.stdout_lines }}"
+      when: http_services.stdout_lines is defined
+
+    - name: Ensure only authorized users can access HTTP services
+      iptables:
+        chain: INPUT
+        dport: "{{ item }}"
+        jump: restricted_http
+      loop: "{{ http_services.stdout_lines }}"
+      when: http_services.stdout_lines is defined
+
+    - name: Create a restricted zone for HTTP services
+      firewalld:
+        zone: restricted_http
+        interfaces: eth0
+        state: present
