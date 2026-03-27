@@ -1,0 +1,28 @@
+- name: Apply security update and restrict HTTP services on Cisco device
+  hosts: cisco_device
+  gather_facts: no
+  tasks:
+    - name: Download security update from Microsoft website
+      ansible.builtin.command:
+        cmd: "wget https://www.microsoft.com/security/blog/update/MS15-034"
+      register: download_update
+
+    - name: Install security update on Cisco device
+      ansible.builtin.command:
+        cmd: "install_update.sh {{ download_update.stdout }}"
+      when: download_update.stdout is defined
+
+    - name: Identify HTTP services to restrict
+      ansible.builtin.command:
+        cmd: "identify_http_services.sh"
+      register: http_services
+
+    - name: Configure access control rules for HTTP services
+      ansible.builtin.command:
+        cmd: "configure_access_control.sh {{ http_services.stdout }}"
+      when: http_services.stdout is defined
+
+    - name: Ensure only authorized users can access HTTP services
+      ansible.builtin.command:
+        cmd: "restrict_access.sh authorized_users"
+      when: http_services.stdout is defined
