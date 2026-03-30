@@ -1,0 +1,26 @@
+- name: Install Security Update on Windows System
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory with the security update file
+      win_shell: |
+        cd C:\Path\To\Security\Update
+      args:
+        executable: cmd.exe
+
+    - name: Run the installation command for the security update
+      win_shell: |
+        .\install_security_update.bat
+      args:
+        executable: cmd.exe
+      environment:
+        PATH: C:\Windows\system32;C:\Windows;C:\Windows\System32\wbem;C:\Windows\System32\WindowsPowerShell\v1.0\
+
+    - name: Verify the installation of the security update
+      win_shell: |
+        wmic qfe listbrief | findstr "SecurityUpdateID"
+      register: installation_output
+
+    - name: Display installation details
+      debug:
+        var: installation_output.stdout
