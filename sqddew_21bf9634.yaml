@@ -1,0 +1,21 @@
+- name: Install Security Update on Windows System
+  hosts: windows_servers
+  tasks:
+    - name: Navigate to the directory with the security update file
+      win_shell: |
+        cd C:\Path\To\Update\Directory
+      register: directory_changed
+
+    - name: Install the security update
+      win_shell: |
+        .\security_update_installer.exe /quiet /norestart
+      when: directory_changed.changed
+
+    - name: Verify the installation of the security update
+      win_shell: |
+        Get-Hotfix | Select-Object -Property HotFixID, Description, InstalledOn
+      register: update_installed
+
+    - name: Display installation details
+      debug:
+        var: update_installed.stdout_lines
