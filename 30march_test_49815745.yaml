@@ -1,4 +1,4 @@
-- name: Install Security Update on Windows Systems
+- name: Install Security Update on Windows System
   hosts: windows_servers
   become: yes
   tasks:
