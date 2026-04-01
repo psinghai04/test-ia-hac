@@ -1,0 +1,28 @@
+- name: Install Patch on Windows Server 2012 R2
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Download the patch file from Microsoft
+      win_shell: |
+        Invoke-WebRequest -Uri "https://download.microsoft.com/download/patch/patch.msi" -OutFile "C:\Patch\patch.msi"
+      args:
+        executable: powershell
+      register: download_result
+
+    - name: Install the downloaded patch
+      win_shell: |
+        Start-Process -FilePath "C:\Patch\patch.msi" -ArgumentList "/quiet" -Wait
+      args:
+        executable: powershell
+      register: install_result
+
+    - name: Verify the installation
+      win_shell: |
+        Get-Hotfix | Select-Object -Property "HotFixID", "Description"
+      args:
+        executable: powershell
+      register: verify_result
+
+    - name: Display installation details
+      debug:
+        var: verify_result.stdout
