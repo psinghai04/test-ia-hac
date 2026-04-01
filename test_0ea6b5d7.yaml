@@ -1,0 +1,35 @@
+- name: Apply security update and restrict HTTP services on Dell system
+  hosts: dell_servers
+  become: yes
+  tasks:
+    - name: Download security update from Microsoft website
+      get_url:
+        url: "https://www.microsoft.com/security/blog/2015/04/07/ms15-034/"
+        dest: /tmp/ms15-034-update.exe
+      when: ansible_distribution == "Dell"
+
+    - name: Install the security update on the Dell system
+      command: >
+        /tmp/ms15-034-update.exe /q /f /p
+      when: ansible_distribution == "Dell"
+
+    - name: Identify HTTP services that need to be restricted
+      shell: |
+        systemctl list-units --type=service --state=running | grep http
+      register: http_services
+
+    - name: Configure firewall to restrict access to HTTP services
+      ansible.builtin.firewall:
+        state: present
+        chain: input
+        destination: "{{ item }}"
+        action: drop
+      loop: "{{ http_services.stdout_lines }}"
+      when: ansible_distribution == "Dell"
+
+    - name: Ensure only authorized users can access HTTP services
+      ansible.builtin.user:
+        name: authorized_user
+        state: present
+        generate_ssh_key: yes
+      when: ansible_distribution == "Dell"
