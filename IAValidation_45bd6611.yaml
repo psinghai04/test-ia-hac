@@ -1,0 +1,47 @@
+- name: Apply security update to Cisco systems
+  hosts: cisco_servers
+  become: yes
+  tasks:
+    - name: Download security update from Cisco website
+      get_url:
+        url: "https://www.cisco.com/cisco-security-update/MS14-068"
+        dest: /tmp/MS14-068_update.zip
+        mode: '0644'
+      register: download_result
+
+    - name: Check if download was successful
+      fail:
+        msg: "Failed to download security update"
+      when: download_result.status != 200
+
+    - name: Extract security update files
+      unarchive:
+        src: /tmp/MS14-068_update.zip
+        dest: /tmp/MS14-068_update
+        remote_src: yes
+
+    - name: Apply security update to domain controllers
+      command: /tmp/MS14-068_update/install.sh -d
+      args:
+        chdir: /tmp/MS14-068_update
+      register: install_result
+
+    - name: Check if installation was successful
+      fail:
+        msg: "Failed to apply security update to domain controllers"
+      when: install_result.rc != 0
+
+    - name: Apply security update to member servers
+      command: /tmp/MS14-068_update/install.sh -m
+      args:
+        chdir: /tmp/MS14-068_update
+      register: install_result_member
+
+    - name: Check if installation was successful on member servers
+      fail:
+        msg: "Failed to apply security update to member servers"
+      when: install_result_member.rc != 0
+
+    - name: Notify completion
+      debug:
+        msg: "Security update MS14-068 applied successfully to all affected systems"
