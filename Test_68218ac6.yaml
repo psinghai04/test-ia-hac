@@ -1,4 +1,4 @@
-name: Remediation Steps Playbooks
+name: Remediation Steps Playbook
 hosts: all
 tasks:
   - name: Refer to KB Articles
