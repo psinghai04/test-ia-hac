@@ -1,0 +1,33 @@
+- name: Install patches and updates on WindowsServer2016
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloadeds
+      ansible.windows.win_shell: |
+        cd C:\Path\To\PatchesAndUpdates
+      args:
+        executable: powershell
+      register: directory_changed
+
+    - name: Install patches and updates
+      ansible.windows.win_shell: |
+        foreach ($patch in Get-ChildItem -Filter "*.msu") {
+            $patchName = $patch.Name
+            Write-Host "Installing patch: $patchName"
+            Start-Process -FilePath $patch.FullName -ArgumentList "/quiet" -Wait
+        }
+      args:
+        executable: powershell
+      when: directory_changed.stdout
+
+    - name: Verify installation
+      ansible.windows.win_shell: |
+        $installed_patches = Get-ItemProperty -Path "HKLM:\SOFTWARE\PatchesInstalled" -Name "PatchList"
+        Write-Host "Installed patches: $installed_patches.PatchList"
+      args:
+        executable: powershell
+      register: verify_installation
+
+    - name: Output verification results
+      debug:
+        msg: "{{ verify_installation.stdout }}"
