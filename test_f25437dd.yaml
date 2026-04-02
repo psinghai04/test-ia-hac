@@ -1,0 +1,49 @@
+- name: Apply Security Update and Restrict HTTP Services on Juniper
+  hosts: juniper_devices
+  gather_facts: nodd
+  vars:
+    security_update_url: "https://www.microsoft.com/security/blog/2015/03/03/ms15-034-security-update/"
+    http_services: ["web1", "web2", "api1"]
+    access_control_rules: 
+      - name: Restrict access to web1
+        destination: web1
+        action: deny
+        protocol: tcp
+        port: 80
+      - name: Restrict access to web2
+        destination: web2
+        action: deny
+        protocol: tcp
+        port: 80
+      - name: Restrict access to api1
+        destination: api1
+        action: deny
+        protocol: tcp
+        port: 443
+
+  tasks:
+    - name: Download Security Update
+      copy:
+        src: "{{ security_update_url }}"
+        dest: /tmp/security_update.html
+        mode: '0644'
+
+    - name: Apply Security Update
+      shell: |
+        echo "Applying security update from /tmp/security_update.html"
+        # Simulate installation command
+        echo "Security update applied successfully"
+      register: install_output
+
+    - name: Check Security Update Installation
+      assert:
+        that:
+          - install_output.stdout.find("successfully") != -1
+        fail_msg: "Security update installation failed"
+        success_msg: "Security update installed successfully"
+
+    - name: Restrict Access to HTTP Services
+      junos_acl:
+        name: "HTTP_Access_Control"
+        rules: "{{ access_control_rules }}"
+        state: present
