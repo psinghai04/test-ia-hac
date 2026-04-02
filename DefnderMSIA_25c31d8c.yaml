@@ -1,0 +1,22 @@
+- name: Install patches and updates on WindowsServer2016
+  hosts: windows_servers
+  gather_facts: no
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: |
+        cd C:\PatchesAndUpdates
+      register: directory_change
+
+    - name: Install each patch and update
+      win_shell: |
+        {{ item }}
+      loop:
+        - "msiexec /i \"C:\\PatchesAndUpdates\\patch1.msi\" /quiet /log \"C:\\PatchesAndUpdates\\patch1_install.log\""
+        - "msiexec /i \"C:\\PatchesAndUpdates\\patch2.msi\" /quiet /log \"C:\\PatchesAndUpdates\\patch2_install.log\""
+        - "msiexec /i \"C:\\PatchesAndUpdates\\update1.msi\" /quiet /log \"C:\\PatchesAndUpdates\\update1_install.log\""
+        - "msiexec /i \"C:\\PatchesAndUpdates\\update2.msi\" /quiet /log \"C:\\PatchesAndUpdates\\update2_install.log\""
+      register: install_output
+
+    - name: Display installation output
+      debug:
+        var: install_output.stdout
