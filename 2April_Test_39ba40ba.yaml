@@ -1,0 +1,52 @@
+- name: Apply security update MS15-034 and restrict HTTPS service access
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Download the security update MS15-034
+      win_package:
+        name: "MS15-034"
+        source: "http://update.microsoft.com/download/MS15-034.msi"
+        state: present
+
+    - name: Install the security update MS15-034
+      win_package:
+        name: "MS15-034"
+        state: installed
+
+    - name: Open Windows Firewall with Advanced Security
+      win_service:
+        name: "mpsvssvc"
+        state: started
+
+    - name: Create inbound rule to block HTTP services
+      win_firewall_rule:
+        name: "Block HTTP Services"
+        direction: Inbound
+        action: Block
+        protocol: TCP
+        localport: 80
+        remoteip: Any
+        description: "Blocks all incoming connections to HTTP services on port 80"
+        profile: Any
+
+    - name: Apply the firewall rule to the appropriate network profile(s)
+      win_firewall_rule:
+        name: "Block HTTP Services"
+        direction: Inbound
+        action: Block
+        protocol: TCP
+        localport: 80
+        remoteip: Any
+        description: "Blocks all incoming connections to HTTP services on port 80"
+        profile: Public
+
+    - name: Apply the firewall rule to the appropriate network profile(s)
+      win_firewall_rule:
+        name: "Block HTTP Services"
+        direction: Inbound
+        action: Block
+        protocol: TCP
+        localport: 80
+        remoteip: Any
+        description: "Blocks all incoming connections to HTTP services on port 80"
+        profile: Private
