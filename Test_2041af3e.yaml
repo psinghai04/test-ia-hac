@@ -1,0 +1,25 @@
+- name: Install security update on domain controllers and member servers
+  hosts: domain_controllers, member_servers
+  become: yes
+  tasks:
+    - name: Update package list
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Update package list
+      yum:
+        update_cache: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Install security update
+      apt:
+        name: "{{ security_update_file }}"
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install security update
+      yum:
+        name: "{{ security_update_file }}"
+        state: present
+      when: ansible_os_family == "RedHat"
