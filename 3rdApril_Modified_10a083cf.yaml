@@ -1,0 +1,29 @@
+- name: Install Security Update on Linux Systems
+  hosts: linux_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory where the security update file was downloaded
+      ansible.builtin.file:
+        path: /path/to/security/update
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Run the installation command for the security update
+      ansible.builtin.command:
+        cmd: >
+          /path/to/security/update/install_command
+          --option1 value1
+          --option2 value2
+          ...
+      environment:
+        PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      register: install_output
+
+    - name: Check if the installation was successful
+      ansible.builtin.assert:
+        that:
+          - install_output.stdout.find('Installation successful') != -1
+        fail_msg: "Security update installation failed"
+        success_msg: "Security update installed successfully on {{ inventory_hostname }}"
