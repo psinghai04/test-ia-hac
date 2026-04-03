@@ -1,0 +1,30 @@
+- name: Install Security Updates on Windows Systems
+  hosts: windows_servers
+  tasks:
+    - name: Navigate to the directory with the security update file
+      win_shell: |
+        cd C:\Path\To\Security\Update
+      args:
+        executable: cmd
+      register: directory_changed
+
+    - name: Run the installation command for the security update
+      win_shell: |
+        echo Installing security update...
+        start /wait msiexec /i SecurityUpdate.msi /quiet
+      args:
+        executable: cmd
+      when: directory_changed.stdout.find('SecurityUpdate.msi') != -1
+
+    - name: Verify installation success
+      win_shell: |
+        echo Verifying installation...
+        msinfo32 | findstr /I "Security Update Installed"
+      args:
+        executable: cmd
+      register: verification_output
+
+    - name: Display installation status
+      debug:
+        msg: "{{ verification_output.stdout }}"
+      when: verification_output.stdout != ""
