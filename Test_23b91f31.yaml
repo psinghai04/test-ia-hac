@@ -1,0 +1,36 @@
+- name: Install patches and updates on Windows Server 2016
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: |
+        cd C:\Path\To\PatchesAndUpdates
+      args:
+        executable: powershell
+      register: directory_changed
+
+    - name: Install each patch and update
+      win_shell: |
+        $patches = Get-ChildItem -Path "C:\Path\To\PatchesAndUpdates\*.msu"
+        foreach ($patch in $patches) {
+          Add-AppxPackage -Path $patch.FullName
+        }
+      args:
+        executable: powershell
+      register: patches_installed
+
+    - name: Verify installation of patches and updates
+      win_shell: |
+        $installed_patches = Get-ChildItem -Path "C:\Path\To\PatchesAndUpdates\*.msu" | Where-Object { $_.Attributes -match "Archive" }
+        if ($installed_patches.Count -eq 0) {
+          Write-Host "All patches and updates have been successfully installed."
+        } else {
+          Write-Host "Some patches and updates are still pending installation."
+        }
+      args:
+        executable: powershell
+      register: installation_verification
+
+    - name: Output installation verification result
+      debug:
+        msg: "{{ installation_verification.stdout }}"
