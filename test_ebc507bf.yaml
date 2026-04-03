@@ -1,0 +1,44 @@
+- name: Apply security update and restrict HTTP services on Juniper system
+  hosts: juniper_servers
+  become: yes
+  tasks:
+    - name: Download security update from Microsoft
+      get_url:
+        url: https://download.microsoft.com/download/MS15-034/MS15-034.exe
+        dest: /tmp/MS15-034.exe
+
+    - name: Install security update on Juniper system
+      command: /tmp/MS15-034.exe /quiet
+      when: ansible_os_family == "Juniper"
+
+    - name: Identify HTTP services to restrict
+      shell: "systemctl list-units --type=service | grep http"
+      register: http_services
+
+    - name: Configure firewall to restrict HTTP services
+      junos_firewall:
+        firewall: firewall1
+        rule:
+          name: restrict_http
+          action: deny
+          source:
+            address: 192.168.1.0/24
+          destination:
+            address: 10.0.0.0/8
+            port: 80
+          protocol: tcp
+        state: present
+
+    - name: Ensure only authorized users can access HTTP services
+      junos_acl:
+        acl: http_access
+        rule:
+          name: allow_authorized
+          action: permit
+          source:
+            address: 10.1.1.0/24
+          destination:
+            address: 10.0.0.0/8
+            port: 80
+          protocol: tcp
+        state: present
