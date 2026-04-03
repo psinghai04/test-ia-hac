@@ -1,0 +1,33 @@
+- name: Apply security update to Cisco domain controllers and member servers
+  hosts: cisco_servers
+  become: yes
+  tasks:
+    - name: Connect to domain controllers and apply security update
+      ansible.builtin.shell:
+        cmd: >
+          ssh domain_controller_user@domain_controller_ip
+          cd /path/to/security/update
+          ./install_security_update.sh
+      register: domain_controller_update
+      when: ansible_facts['ansible_os'] == 'Cisco' and ansible_facts['ansible_os_version'] == 'Cisco'
+
+    - name: Connect to member servers and apply security update
+      ansible.builtin.shell:
+        cmd: >
+          ssh member_server_user@member_server_ip
+          cd /path/to/security/update
+          ./install_security_update.sh
+      register: member_server_update
+      when: ansible_facts['ansible_os'] == 'Cisco' and ansible_facts['ansible_os_version'] == 'Cisco'
+
+    - name: Verify domain controller update
+      ansible.builtin.assert:
+        that:
+          - domain_controller_update.stdout contains 'update successful'
+      when: ansible_facts['ansible_os'] == 'Cisco' and ansible_facts['ansible_os_version'] == 'Cisco'
+
+    - name: Verify member server update
+      ansible.builtin.assert:
+        that:
+          - member_server_update.stdout contains 'update successful'
+      when: ansible_facts['ansible_os'] == 'Cisco' and ansible_facts['ansible_os_version'] == 'Cisco'
