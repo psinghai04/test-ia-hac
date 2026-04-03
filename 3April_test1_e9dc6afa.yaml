@@ -1,4 +1,4 @@
-- name: Apply security update and restrict HTTP access
+- name: Apply security update and restrict HTTPS access
   hosts: windows_servers
   become: yes
   tasks:
