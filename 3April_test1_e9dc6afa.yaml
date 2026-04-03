@@ -1,0 +1,37 @@
+- name: Apply security update and restrict HTTP access
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Download the security update from Microsoft website
+      win_shell: |
+        Invoke-WebRequest -Uri "https://download.microsoft.com/download/1/2/3/12345678-90ab-cdef-ghij-klmnopqrstuv" -OutFile "C:\Windows\Temp\MS15-034.exe"
+      args:
+        executable: powershell
+
+    - name: Install the security update
+      win_shell: |
+        Start-Process -FilePath "C:\Windows\Temp\MS15-034.exe" -ArgumentList "/quiet" -Wait
+      args:
+        executable: powershell
+
+    - name: Open Windows Firewall with Advanced Security
+      win_shell: |
+        & 'C:\Windows\System32\control.exe' /name Microsoft.WindowsFirewall /page advanced
+      args:
+        executable: powershell
+
+    - name: Create inbound rule to block HTTP services
+      win_firewall:
+        name: Block HTTP Services
+        direction: in
+        protocol: TCP
+        localport: 80
+        action: block
+        profile: all
+
+    - name: Save and apply the firewall rule
+      win_firewall:
+        name: Block HTTP Services
+        state: present
+      args:
+        executable: powershell
