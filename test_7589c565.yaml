@@ -1,0 +1,44 @@
+- name: Apply security update and restrict HTTP services on Dell system
+  hosts: dell_servers
+  become: yes阿萨德
+  vars:
+    security_update_url: "https://www.microsoft.com/security/blog/2015/03/04/patch-tuesday-march-2015-15034/"
+    http_services: ["httpd", "nginx"]
+
+  tasks:
+    - name: Download the security update
+      get_url:
+        url: "{{ security_update_url }}"
+        dest: "/tmp/ms15-034_update.exe"
+      register: download_result
+
+    - name: Install the security update
+      win_shell:
+        cmd: "start-process /tmp/ms15-034_update.exe -ArgumentList '/quiet'"
+      when: download_result.status == 200
+
+    - name: Identify HTTP services to restrict
+      set_fact:
+        http_services_to_restrict: "{{ http_services }}"
+
+    - name: Configure firewall to restrict access to HTTP services
+      ansible.builtin.firewall:
+        action: add
+        proto: tcp
+        dport: "{{ item }}"
+        state: present
+        chain: INPUT
+      loop: "{{ http_services_to_restrict }}"
+
+    - name: Ensure only authorized users can access HTTP services
+      ansible.builtin.user:
+        name: "authorized_user"
+        state: present
+        generate_ssh_key: yes
+      when: ansible_facts.packages.httpd is defined
+
+    - name: Set permissions for HTTP services
+      ansible.builtin.chmod:
+        path: "/var/www/html"
+        mode: "0600"
+      when: ansible_facts.packages.httpd is defined
