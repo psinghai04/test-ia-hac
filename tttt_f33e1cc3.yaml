@@ -1,0 +1,32 @@
+- name: Apply security update and restrict HTTP services
+  hosts: linux_servers
+  become: yes是
+  tasks:
+    - name: Download security update from Microsoft website
+      get_url:
+        url: "https://www.microsoft.com/security/blog/2015/03/09/ms15-034-security-update-for-windows/"
+        dest: /tmp/ms15-034-update.exe
+      when: ansible_distribution == "Ubuntu" or ansible_distribution == "Fedora" or ansible_distribution == "EulerOS" or ansible_distribution == "Tiny Core Linux" or ansible_distribution == "IBM" or ansible_distribution == "FortiSOAR" or ansible_distribution == "F5 Networks Big-IP"
+
+    - name: Install the security update
+      command: "/usr/bin/wget -O /tmp/ms15-034-update.exe https://www.microsoft.com/security/blog/2015/03/09/ms15-034-security-update-for-windows/"
+      when: ansible_distribution == "Ubuntu" or ansible_distribution == "Fedora" or ansible_distribution == "EulerOS" or ansible_distribution == "Tiny Core Linux" or ansible_distribution == "IBM" or ansible_distribution == "FortiSOAR" or ansible_distribution == "F5 Networks Big-IP"
+
+    - name: Identify HTTP services to restrict
+      shell: "systemctl list-units --type=service | grep http"
+      register: http_services
+
+    - name: Restrict access to HTTP services using firewall rules
+      firewalld:
+        service: "{{ item }}"
+        action: add
+      loop: "{{ http_services.stdout_lines }}"
+      when: ansible_distribution == "Fedora" or ansible_distribution == "EulerOS" or ansible_distribution == "Tiny Core Linux" or ansible_distribution == "Ubuntu" or ansible_distribution == "IBM" or ansible_distribution == "FortiSOAR" or ansible_distribution == "F5 Networks Big-IP"
+
+    - name: Ensure only authorized users can access HTTP services
+      acl:
+        path: /var/www/html
+        user: www-data
+        type: allow
+        recurse: yes
+      when: ansible_distribution == "Fedora" or ansible_distribution == "EulerOS" or ansible_distribution == "Tiny Core Linux" or ansible_distribution == "Ubuntu" or ansible_distribution == "IBM" or ansible_distribution == "FortiSOAR" or ansible_distribution == "F5 Networks Big-IP"
