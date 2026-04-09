@@ -2,7 +2,7 @@
   hosts: dell_servers
   become: yes
   tasks:
-    - name: Download security update from Microsoft website
+    - name: Download security update from Microsoft websites
       get_url:
         url: "https://www.microsoft.com/security/blog/2015/04/07/ms15-034/"
         dest: /tmp/ms15-034-update.exe
