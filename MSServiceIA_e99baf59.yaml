@@ -1,0 +1,35 @@
+- name: Install patches and updates on WindowsServer2025
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: |
+        $downloadPath = "C:\PatchesAndUpdates"
+        Set-Location -Path $downloadPath
+      args:
+        executable: powershell
+      register: navigate_result
+
+    - name: Install patches and updates
+      win_shell: |
+        # Example command to install a patch
+        # Replace 'patch1.msi' with the actual patch file name
+        Start-Process -FilePath "msiexec" -ArgumentList "/i C:\PatchesAndUpdates\patch1.msi /quiet" -Wait
+
+        # Example command to install an update
+        # Replace 'update1.exe' with the actual update file name
+        Start-Process -FilePath "C:\PatchesAndUpdates\update1.exe" -ArgumentList "/quiet" -Wait
+      args:
+        executable: powershell
+      register: install_result
+
+    - name: Verify installation
+      win_shell: |
+        # Check if the patch and update are installed successfully
+        if ($installResult.ExitCode -eq 0) {
+          Write-Host "Installation completed successfully."
+        } else {
+          Write-Host "Installation failed with exit code: $installResult.ExitCode"
+        }
+      args:
+        executable: powershell
