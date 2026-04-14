@@ -1,0 +1,33 @@
+- name: Install patches and updates on WindowsServer2025
+  hosts: windows_servers
+  become: yes
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: |
+        cd C:\Path\To\PatchesAndUpdates
+      args:
+        executable: powershell
+
+    - name: Install patches and updates
+      win_shell: |
+        Get-ChildItem -Filter *.msu | ForEach-Object {
+          $patch = $_
+          Write-Host "Installing patch: $patch"
+          Start-Process -FilePath "wusa.exe" -ArgumentList "/qb+/norestart+$($patch.FullName)" -Wait
+        }
+      args:
+        executable: powershell
+
+    - name: Verify installation of patches and updates
+      win_shell: |
+        Get-ChildItem -Filter *.msu | ForEach-Object {
+          $patch = $_
+          Write-Host "Verifying patch: $patch"
+          if (Test-Path -Path "C:\Windows\SoftwareDistribution\Download\$($patch.BaseName).log") {
+            Write-Host "Patch installation log found for: $patch"
+          } else {
+            Write-Host "Patch installation log not found for: $patch"
+          }
+        }
+      args:
+        executable: powershell
