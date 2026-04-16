@@ -1,0 +1,28 @@
+- name: Install patches and updates on WindowsServer2025d
+  hosts: "{{target_hosts}}"
+  gather_facts: no
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: |
+        cd C:\path\to\patches
+      args:
+        executable: powershell
+
+    - name: Install each patch and update
+      win_shell: |
+        $patchFiles = Get-ChildItem -Filter "*.msu"
+        foreach ($file in $patchFiles) {
+          $file.FullName
+          Start-Process -FilePath "wusa" -ArgumentList "/un /kb 1234567" -Wait
+        }
+      args:
+        executable: powershell
+      when: ansible_facts.packages.windows_patches is defined
+
+    - name: Verify installation
+      win_shell: |
+        $installedPatches = Get-Hotfix
+        $installedPatches | Format-Table -Property HotFixID, Description, InstalledOn
+      args:
+        executable: powershell
+      when: ansible_facts.packages.windows_patches is defined
