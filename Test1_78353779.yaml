@@ -1,0 +1,43 @@
+- name: Apply security update and restrict HTTP services on Cisco device
+  hosts: cisco_devices
+  gather_facts: no
+  vars:
+    security_update_url: "https://www.microsoft.com/security/blog/2015/03/12/patch-ms15-034/"
+    http_services: ["HTTP_SERVICE_1", "HTTP_SERVICE_2"]  # Replace with actual service names
+
+  tasks:
+    - name: Download security update
+      shell: |
+        wget -O ms15-034_update.zip "{{ security_update_url }}"
+      register: download_result
+
+    - name: Install security update on Cisco device
+      shell: |
+        unzip ms15-034_update.zip
+        ./install_update.sh -d /path/to/update -r Cisco
+      when: download_result.stdout.find('success') != -1
+
+    - name: Identify HTTP services to restrict
+      set_fact:
+        restricted_services: "{{ http_services }}"
+
+    - name: Configure access control rules for HTTP services
+      shell: |
+        configure terminal
+        access-list RESTRICTED_HTTP deny tcp any any eq 80
+        access-list RESTRICTED_HTTP deny tcp any any eq 443
+        access-list RESTRICTED_HTTP permit tcp any any eq 80
+        access-list RESTRICTED_HTTP permit tcp any any eq 443
+        access-list RESTRICTED_HTTP deny tcp any any eq 80
+        access-list RESTRICTED_HTTP deny tcp any any eq 443
+        access-list RESTRICTED_HTTP permit tcp any any eq 80
+        access-list RESTRICTED_HTTP permit tcp any any eq 443
+        exit
+      when: restricted_services is defined
+
+    - name: Ensure only authorized users can access HTTP services
+      shell: |
+        configure terminal
+        aaa authentication login default group tacacs+ local
+        exit
+      when: restricted_services is defined
