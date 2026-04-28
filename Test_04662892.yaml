@@ -1,0 +1,15 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  tasks:
+    - name: Navigate to the directory containing the patches and updates
+      shell: cd C:\path\to\patches
+      args:
+        chdir: C:\path\to\patches
+
+    - name: Install the patches and updates using msiexec
+      shell: msiexec /i <patch_file>
+      when: "'<patch_file>' in [list of patch files]"
+
+    - name: Install the patches and updates using Install-Update
+      win_shell: Install-Update -FilePath <patch_file>
+      when: "'<patch_file>' in [list of patch files]"
