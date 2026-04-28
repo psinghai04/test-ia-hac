@@ -1,4 +1,4 @@
-- name: Install patches and updates on WindowsServer2025d
+- name: Install patches and updates on WindowsServer2025
   hosts: "{{target_hosts}}"
   gather_facts: no
   tasks:
