@@ -1,0 +1,31 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Ensure the necessary modules are installed
+      ansible.windows.win_feature:
+        name:
+          - .NET Framework 4.8
+          - Windows Update
+        state: present
+
+    - name: Navigate to the directory where patches and updates are downloaded
+      ansible.windows.win_shell:
+        cmd: "cd C:\\path\\to\\patches\\and\\updates"
+      args:
+        chdir: C:\path\to\patches\and\updates
+
+    - name: Install the patches and updates
+      ansible.windows.win_shell:
+        cmd: "msiexec /i <patch_file>"
+      args:
+        chdir: C:\path\to\patches\and\updates
+
+    - name: Verify the installation of patches and updates
+      ansible.windows.win_shell:
+        cmd: "sfc /scannow"
+      register: result
+
+    - name: Display the result of the verification
+      ansible.builtin.debug:
+        msg: "Verification of patches and updates installation: {{ result.stdout }}"
