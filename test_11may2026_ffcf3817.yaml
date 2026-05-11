@@ -1,0 +1,17 @@
+- name: Install security update on Windows domain controllers and member servers
+  hosts: windows_domain_controllers:windows_member_servers
+  become: yes
+  tasks:
+    - name: Check if the security update is already installed
+      win_pkg:
+        name: "SecurityUpdatePackage"
+      register: update_status
+
+    - name: Install the security update if not installed
+      win_pkg:
+        name: "SecurityUpdatePackage"
+      when: update_status.installed is not defined
+
+    - name: Restart the server to apply the security update
+      win_reboot:
+      when: update_status.installed is defined
