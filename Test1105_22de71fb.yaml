@@ -1,0 +1,29 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Ensure the required PowerShell module is installed
+      win_feature:
+        name: WindowsServer2025-UpdateManagement
+        state: present
+
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: cd C:\Path\To\Your\Updates
+      args:
+        chdir: C:\Path\To\Your\Updates
+
+    - name: Install the patches and updates
+      win_shell: msiexec /i <patch_file>
+      args:
+        chdir: C:\Path\To\Your\Updates
+      register: install_result
+
+    - name: Check if the installation was successful
+      debug:
+        msg: "Installation successful: {{ install_result.stdout }}"
+      when: install_result.stdout is defined
+
+    - name: Handle installation failure
+      debug:
+        msg: "Installation failed: {{ install_result.stderr }}"
+      when: install_result.stderr is defined
