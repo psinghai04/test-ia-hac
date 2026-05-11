@@ -1,0 +1,10 @@
+- name: Install update on Windows 2008 Enterprise Server
+  hosts: windows
+  tasks:
+    - name: Open a terminal or command prompt and navigate to the directory where the update file was downloaded
+      shell: cd C:\path\to\update\directory
+      when: ansible_os_family == "Windows"
+
+    - name: Run the installation command for the update
+      shell: msiexec /i <update_file>
+      when: ansible_os_family == "Windows"
