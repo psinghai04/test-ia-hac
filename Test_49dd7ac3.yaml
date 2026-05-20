@@ -1,4 +1,4 @@
-- name: Install patches and updates on Windows Server 2025
+- name: Install patches and updates on Windows Servers 2025
   hosts: windows
   become: yes
   tasks:
