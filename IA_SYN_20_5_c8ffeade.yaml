@@ -1,0 +1,22 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Check if the patch file exists
+      win_stat:
+        path: C:\Downloads\patch_file.msi
+      register: patch_file
+
+    - name: Fail if the patch file does not exist
+      fail:
+        msg: "Patch file not found in the specified directory."
+      when: not patch_file.stat.exists
+
+    - name: Install the patch
+      win_shell:
+        cmd: msiexec /i C:\Downloads\patch_file.msi
+      when: patch_file.stat.exists
+
+    - name: Notify completion
+      debug:
+        msg: "Patch installation completed successfully."
