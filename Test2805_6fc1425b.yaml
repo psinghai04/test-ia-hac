@@ -1,0 +1,15 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      command: cd C:\path\to\patches
+      when: ansible_facts['distribution'] == 'Windows Server 2025'
+
+    - name: Install the patches using msiexec
+      command: msiexec /i <patch_file>
+      when: ansible_facts['distribution'] == 'Windows Server 2025'
+
+    - name: Install the updates using Install-Update
+      command: Install-Update <update_file>
+      when: ansible_facts['distribution'] == 'Windows Server 2025'
