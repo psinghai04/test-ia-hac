@@ -1,0 +1,15 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Check if the patch or update file exists
+      win_shell: Test-Path -Path "<patch_file_path>"
+      register: patch_exists
+
+    - name: Install the patch or update
+      win_shell: "msiexec /i <patch_file_path>"
+      when: patch_exists.stdout == 'True'
+
+    - name: Alternative installation command if MSI is not used
+      win_shell: "Install-Update -FilePath <patch_file_path>"
+      when: patch_exists.stdout != 'True'
