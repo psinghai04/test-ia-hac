@@ -1,0 +1,19 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Ensure PowerShell is available
+      win_shell: test -Path $env:SystemRoot\System32\WindowsPowerShell\v1.0\PowerShell.exe
+      register: has_powershell
+
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: cd C:\path\to\patches
+      when: has_powershell.stdout == 'True'
+
+    - name: Install patches and updates using MSI
+      win_shell: msiexec /i <patch_file>
+      when: has_powershell.stdout == 'True'
+
+    - name: Install Windows updates using PowerShell
+      win_shell: Install-WindowsUpdate -Name <update_name>
+      when: has_powershell.stdout == 'True'
