@@ -1,0 +1,18 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  tasks:
+    - name: Navigate to the directory where patches and updates are located
+      ansible.windows.win_shell:
+        cmd: cd C:\path\to\patches\directory
+      args:
+        chdir: C:\path\to\patches\directory
+
+    - name: Install patches using msiexec
+      ansible.windows.win_shell:
+        cmd: msiexec /i <patch_file>
+      when: "'<patch_file>' in ansible_facts['gathered_files']"
+
+    - name: Install updates using Install-Update
+      ansible.windows.win_shell:
+        cmd: Install-Update <update_file>
+      when: "'<update_file>' in ansible_facts['gathered_files']"
