@@ -1,4 +1,4 @@
-- name: Install patches and updates on WindowsServer2016
+- name: Install patches and update on WindowsServer2016
   hosts: windows_servers
   become: yes
   tasks:
