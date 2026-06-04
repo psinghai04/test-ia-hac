@@ -1,0 +1,23 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Ensure PowerShell is installed
+      win_feature:
+        name: Windows-Features-PowerShell
+        state: present
+
+    - name: Navigate to the directory where patches and updates are located
+      win_shell: cd C:\path\to\patches\and\updates
+      args:
+        chdir: C:\path\to\patches\and\updates
+
+    - name: Install patches using msiexec
+      win_shell: msiexec /i <patch_file>
+      args:
+        chdir: C:\path\to\patches\and\updates
+
+    - name: Install updates using Install-Update
+      win_shell: Install-Update <update_file>
+      args:
+        chdir: C:\path\to\patches\and\updates
