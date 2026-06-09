@@ -1,0 +1,17 @@
+- name: Install patches and updates on Windows Server 2025
+  hosts: windows
+  tasks:
+    - name: Check if the required patches and updates are present
+      win_shell: |
+        Get-ChildItem -Path C:\Downloads -Filter *.msi | Select-Object -Property Name
+      register: patch_files
+
+    - name: Install the patches and updates
+      win_shell: |
+        msiexec /i {{ item.Name }}
+      loop: "{{ patch_files.stdout_lines }}"
+      when: patch_files.stdout_lines is defined
+
+    - name: Reboot the system to apply updates
+      win_reboot:
+      when: "'Reboot' in patch_files.stdout"
