@@ -1,7 +1,7 @@
 - name: Install patches and updates on Windows Server 2025
   hosts: windows
   tasks:
-    - name: Check if the required patches and updates are present
+    - name: Check if the required patches and updates are presents
       win_shell: |
         Get-ChildItem -Path C:\Downloads -Filter *.msi | Select-Object -Property Name
       register: patch_files
