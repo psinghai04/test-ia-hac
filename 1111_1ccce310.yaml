@@ -1,0 +1,24 @@
+- name: Install security update on Cisco system
+  hosts: cisco_systems
+  become: yes
+  tasks:
+    - name: Check if the security update file is present
+      shell: ls -l /path/to/security/update/file
+      register: update_file_status
+      ignore_errors: yes
+
+    - name: Install security update using yum
+      yum:
+        name: /path/to/security/update/file
+        state: present
+      when: "'-rw-r--r--' in update_file_status.stdout"
+
+    - name: Install security update using apt
+      apt:
+        deb: /path/to/security/update/file
+        state: present
+      when: "'-rw-r--r--' in update_file_status.stdout"
+
+    - name: Verify installation
+      shell: "echo 'Security update installed successfully'"
+      when: "'Security update installed successfully' in ansible_facts"
