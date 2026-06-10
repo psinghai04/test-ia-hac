@@ -1,0 +1,25 @@
+- name: Install patches and updates on Windows Server 2022
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Ensure PowerShell is installed
+      win_feature:
+        name: PowerShell
+        state: present
+
+    - name: Navigate to the directory where patches and updates are downloaded
+      win_shell: cd C:\path\to\patches
+      args:
+        chdir: C:\path\to\patches
+
+    - name: Install the patches and updates using MSI command
+      win_shell: msiexec /i <patch_file>
+      args:
+        chdir: C:\path\to\patches
+        executable: cmd.exe
+
+    - name: Install the patches and updates using DISM command
+      win_shell: dism /online /add-package /packagePath:<patch_file>
+      args:
+        chdir: C:\path\to\patches
+        executable: cmd.exe
