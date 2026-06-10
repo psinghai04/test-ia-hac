@@ -1,0 +1,18 @@
+- name: Install security update on Windows servers
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Ensure PowerShell is installed
+      win_package:
+        name: Windows PowerShell
+        state: present
+
+    - name: Install security update
+      win_package:
+        name: "SecurityUpdate-2016"
+        state: present
+
+    - name: Restart affected servers
+      win_service:
+        name: "ServerName"
+        state: restarted
