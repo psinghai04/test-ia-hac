@@ -1,0 +1,13 @@
+- name: Install patches and updates on Windows Server 2016
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      command: cd C:\Path\To\Patches
+      args:
+        chdir: C:\Path\To\Patches
+
+    - name: Install the patches and updates
+      command: msiexec /i <patch_file>
+      args:
+        cmd: msiexec /i <patch_file>
