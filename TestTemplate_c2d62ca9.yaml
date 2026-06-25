@@ -1,0 +1,23 @@
+- name: Install security updates on Windows Server 2016
+  hosts: windows_server_2016
+  become: yes
+  tasks:
+    - name: Install security updates from Windows Update
+      win_update:
+        update_mode: security
+        reboot: yes
+      register: update_result
+
+    - name: Display update installation results
+      debug:
+        var: update_result
+
+    - name: Verify system is up to date
+      win_update:
+        update_mode: security
+        reboot: no
+      register: update_status
+
+    - name: Display update status
+      debug:
+        msg: "All security updates installed successfully: {{ update_status }}"
