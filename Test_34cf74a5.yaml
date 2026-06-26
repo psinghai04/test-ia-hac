@@ -1,0 +1,27 @@
+---
+- name: Install update on Windows Server and Test 2016
+  hosts: windows_server_2016
+  become: yes
+  tasks:
+    - name: Ensure the update file exists
+      win_shell: "Get-Item <update_file_path> | Select-Object -Property Name, FullName"
+      register: update_file_info
+
+    - name: Display update file information
+      debug:
+        msg: "Update file found: {{ update_file_info.stdout }}"
+
+    - name: Navigate to the update file directory
+      win_shell: "cd <update_file_path>"
+
+    - name: Install the update using msiexec
+      win_shell: "msiexec /i <update_file_name>"
+      when: update_file_info.stdout_lines | length > 0
+
+    - name: Verify update installation
+      win_shell: "systeminfo | findstr /C:\"OS Build Number\""
+      register: system_info
+
+    - name: Display system information
+      debug:
+        msg: "System info: {{ system_info.stdout }}"
