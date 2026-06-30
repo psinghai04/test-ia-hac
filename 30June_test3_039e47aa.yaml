@@ -1,0 +1,38 @@
+---
+- name: Apply updates on Windows Server 2016
+  hosts: windows_server_2016
+  become: yes
+  tasks:
+    - name: Check for available updates using Windows Update
+      win_update:
+        reboot_required: yes
+        state: present
+      register: update_info
+
+    - name: Display available updates
+      debug:
+        msg: "Available updates: {{ update_info.updates }}"
+
+    - name: Apply updates using Windows Update
+      win_update:
+        reboot_required: yes
+        state: present
+      when: update_info.updates is defined
+
+    - name: Ensure WSUS is configured for update management
+      win_feature:
+        name: Windows Server Update Services
+        state: present
+
+    - name: Manually install downloaded update files if required
+      win_copy:
+        src: /path/to/update/files/
+        dest: C:\Updates\
+        remote_src: yes
+      when: update_info.updates is undefined
+
+    - name: Execute script to install manual updates
+      win_shell: |
+        cd C:\Updates
+        install_update.exe /quiet
+      when: update_info.updates is undefined
