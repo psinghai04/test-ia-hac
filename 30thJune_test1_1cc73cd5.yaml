@@ -1,0 +1,19 @@
+- name: Apply updates to Windows Server 2016
+  hosts: windows_server_2016
+  become: yes
+  tasks:
+    - name: Ensure Windows Update is enabled
+      win_service:
+        name: "wuauserv"
+        state: started
+
+    - name: Apply downloaded updates
+      win_update:
+        update_mode: "reboot"
+        update_classification: "security"
+        update_type: "quality"
+      when: win_update_info is defined
+
+    - name: Reboot the server if updates require it
+      win_reboot:
+        reboot_if_needed: yes
