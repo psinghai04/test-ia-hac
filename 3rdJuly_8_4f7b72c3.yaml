@@ -1,0 +1,23 @@
+- name: Install Firefox on Linux
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check if Firefox is already installed
+      shell: dpkg-query -S firefox
+      register: firefox_status
+
+    - name: Install Firefox if not already installed
+      block:
+        - name: Update package list
+          shell: apt-get update
+
+        - name: Install Firefox
+          shell: apt-get install -y firefox
+
+    - name: Verify Firefox installation
+      shell: dpkg-query -S firefox
+      register: firefox_installed
+
+    - name: Display installation status
+      debug:
+        msg: "Firefox is installed: {{ firefox_installed.stdout }}"
