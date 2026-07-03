@@ -1,0 +1,16 @@
+- name: Install patches and updates on Windows Server 2019
+  hosts: windows
+  become: yes
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      shell: cd C:\path\to\patches\and\updates
+      args:
+        chdir: C:\path\to\patches\and\updates
+
+    - name: Install patches and updates using MSI command
+      shell: msiexec /i <patch_file>
+      when: "'<patch_file>' in ['/path/to/patch1.msi', '/path/to/patch2.msi']"
+
+    - name: Install patches and updates using DISM command
+      shell: dism /online /add-package /packagePath:<patch_file>
+      when: "'<patch_file>' in ['/path/to/patch3.cab', '/path/to/patch4.cab']"
