@@ -1,5 +1,5 @@
 - name: Install patches and updates on Windows Server 2019
-  hosts: windows
+  hosts: window
   become: yes
   tasks:
     - name: Navigate to the directory where patches and updates are downloaded
