@@ -1,0 +1,10 @@
+- name: Ping the target Windows machine
+  hosts: windows
+  tasks:
+    - name: Ping the target Windows machine
+      shell: "ping -n 4 172.20.138.13"
+      register: ping_result
+
+    - name: Display ping result
+      debug:
+        msg: "{{ ping_result.stdout }}"
