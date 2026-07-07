@@ -1,0 +1,20 @@
+- name: Install patches and updates on Windows Server 2019
+  hosts: windows
+  tasks:
+    - name: Navigate to the directory where patches and updates are downloaded
+      ansible.windows.shell:
+        cmd: cd C:\path\to\patches
+      args:
+        chdir: C:\path\to\patches
+
+    - name: Install patches using MSIEXE
+      ansible.windows.shell:
+        cmd: msiexec /i <patch_file>
+      args:
+        in: <patch_file>
+
+    - name: Install patches using DISM
+      ansible.windows.shell:
+        cmd: dism /online /add-package /packagePath:<patch_file>
+      args:
+        in: <patch_file>
